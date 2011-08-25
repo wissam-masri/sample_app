@@ -8,6 +8,9 @@ module Autotest::GnomeNotify
   end
  
   Autotest.add_hook :ran_command do |at|
+    autotest.add_mapping(%r%^spec/(requests)/.*rb$%) do|filename, _|
+      filename
+    end
     image_root = "~/.autotest_images"
     results = [at.results].flatten.join("\n")
     results.gsub!(/\\e\[\d+m/,'')
