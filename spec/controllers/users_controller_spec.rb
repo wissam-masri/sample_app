@@ -53,6 +53,25 @@ describe UsersController do
                                            :content => "Next")
       end
     end
+    
+    describe "for admin users" do
+      it "should show the delete button" do
+        @user  = test_sign_in(Factory(:user))
+        @user.toggle!(:admin)        
+        get :index
+        response.should have_selector("a", :href => "/users/1",
+                                           :content => "delete")
+      end 
+    end
+
+    describe "for non-admin signed-in user" do
+      it "should not show the delete button" do
+        @user = test_sign_in(Factory(:user))
+        get :index
+        response.should_not have_selector("a", :href => "/users/1",
+                                           :content => "delete")
+      end
+    end
   end 
 
   describe "GET 'show'" do
@@ -88,6 +107,16 @@ describe UsersController do
   end
 
   describe "GET 'new'" do
+
+    describe "signed-in user attempt" do
+      it "should redirect to home page" do
+        @user = Factory(:user)
+        test_sign_in(@user)
+        get :new
+        response.should redirect_to(root_path)
+      end
+    end  
+
     it "should be successful" do
       get :new
       response.should be_success
@@ -119,8 +148,8 @@ describe UsersController do
     end
   end
 
-  describe "POST 'create'" do
-    
+  describe "POST 'create'" do   
+
     describe "failure" do
       
       before(:each) do
@@ -325,6 +354,11 @@ describe UsersController do
       it "should redirect to the users page" do
         delete :destroy, :id => @user
         response.should redirect_to(users_path)
+      end
+      it "should not let an admin destroy himself" do
+        lambda do
+          delete :destroy, :id => User.find_by_email("admin@example.com")
+        end.should_not change(User, :count)
       end
     end
   end
